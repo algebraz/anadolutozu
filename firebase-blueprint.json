@@ -1,0 +1,64 @@
+{
+  "entities": {
+    "Post": {
+      "title": "Post",
+      "description": "A music project post containing details about an AI-generated song.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "Title of the song/post" },
+        "youtubeUrl": { "type": "string", "description": "YouTube video URL" },
+        "musicStyle": { "type": "string", "description": "Müzik Tarzı" },
+        "musicalCharacter": { "type": "string", "description": "Müzikal Karakter" },
+        "lyricStyle": { "type": "string", "description": "Söz Tarzı" },
+        "visualStyle": { "type": "string", "description": "Görsel Tarz" },
+        "story": { "type": "string", "description": "Hikayesi" },
+        "lyrics": { "type": "string", "description": "ŞARKI SÖZÜ VE YAPISI" },
+        "rhythm": { "type": "string", "description": "MATEMATİKSEL RİTİM VE DÜZENLEME" },
+        "imagePrompt": { "type": "string", "description": "ALBÜM KAPAĞI İÇİN GÖRSEL KOMUTU" },
+        "coverImageUrl": { "type": "string", "description": "URL of the cover image" },
+        "createdAt": { "type": "timestamp", "description": "Creation timestamp" },
+        "authorId": { "type": "string", "description": "ID of the admin who created the post" }
+      },
+      "required": ["title", "createdAt", "authorId"]
+    },
+    "Comment": {
+      "title": "Comment",
+      "description": "A user comment on a music post.",
+      "type": "object",
+      "properties": {
+        "postId": { "type": "string", "description": "ID of the post this comment belongs to" },
+        "userId": { "type": "string", "description": "ID of the user who made the comment" },
+        "userName": { "type": "string", "description": "Display name of the user" },
+        "userPhoto": { "type": "string", "description": "Photo URL of the user" },
+        "text": { "type": "string", "description": "The comment text" },
+        "createdAt": { "type": "timestamp", "description": "Creation timestamp" }
+      },
+      "required": ["postId", "userId", "userName", "text", "createdAt"]
+    },
+    "User": {
+      "title": "User",
+      "description": "User profile and role information.",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "description": "User email address" },
+        "role": { "type": "string", "description": "User role, e.g., 'admin' or 'user'" },
+        "createdAt": { "type": "timestamp", "description": "Creation timestamp" }
+      },
+      "required": ["email", "role"]
+    }
+  },
+  "firestore": {
+    "/posts/{postId}": {
+      "schema": { "$ref": "#/entities/Post" },
+      "description": "Collection of music posts"
+    },
+    "/comments/{commentId}": {
+      "schema": { "$ref": "#/entities/Comment" },
+      "description": "Collection of user comments"
+    },
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "Collection of user profiles and roles"
+    }
+  }
+}

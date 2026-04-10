@@ -1,0 +1,190 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: posts
+    // Document ID: auto-generated
+    // Fields:
+    //   - title: string (required)
+    //   - youtubeUrl: string (optional)
+    //   - musicStyle: string (optional)
+    //   - musicalCharacter: string (optional)
+    //   - lyricStyle: string (optional)
+    //   - visualStyle: string (optional)
+    //   - story: string (optional)
+    //   - lyrics: string (optional)
+    //   - rhythm: string (optional)
+    //   - imagePrompt: string (optional)
+    //   - coverImageUrl: string (optional)
+    //   - createdAt: timestamp (required, immutable)
+    //   - authorId: string (required, immutable)
+    //
+    // Collection: comments
+    // Document ID: auto-generated
+    // Fields:
+    //   - postId: string (required, immutable)
+    //   - userId: string (required, immutable)
+    //   - userName: string (required)
+    //   - userPhoto: string (optional)
+    //   - text: string (required, max 1000 chars)
+    //   - createdAt: timestamp (required, immutable)
+    //
+    // Collection: users
+    // Document ID: user uid
+    // Fields:
+    //   - email: string (required)
+    //   - role: string (required, 'admin' or 'user')
+    //   - createdAt: timestamp (required, immutable)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && (
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') ||
+        (request.auth.token.email == "zaferozlu@gmail.com" && request.auth.token.email_verified == true)
+      );
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function hasOnlyAllowedFields(allowedFields) {
+      return request.resource.data.keys().hasOnly(allowedFields);
+    }
+
+    function hasRequiredFields(requiredFields) {
+      return request.resource.data.keys().hasAll(requiredFields);
+    }
+
+    function isStringWithMaxSize(val, maxSize) {
+      return val is string && val.size() <= maxSize;
+    }
+
+    function isOptionalStringWithMaxSize(field, maxSize) {
+      return !field in request.resource.data || isStringWithMaxSize(request.resource.data[field], maxSize);
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidPost() {
+      let allowedFields = ['title', 'youtubeUrl', 'musicStyle', 'musicalCharacter', 'lyricStyle', 'visualStyle', 'story', 'lyrics', 'rhythm', 'imagePrompt', 'coverImageUrl', 'createdAt', 'authorId'];
+      let requiredFields = ['title', 'createdAt', 'authorId'];
+      
+      return hasOnlyAllowedFields(allowedFields) &&
+             hasRequiredFields(requiredFields) &&
+             isStringWithMaxSize(request.resource.data.title, 200) &&
+             isOptionalStringWithMaxSize('youtubeUrl', 500) &&
+             isOptionalStringWithMaxSize('musicStyle', 500) &&
+             isOptionalStringWithMaxSize('musicalCharacter', 500) &&
+             isOptionalStringWithMaxSize('lyricStyle', 500) &&
+             isOptionalStringWithMaxSize('visualStyle', 500) &&
+             isOptionalStringWithMaxSize('story', 5000) &&
+             isOptionalStringWithMaxSize('lyrics', 10000) &&
+             isOptionalStringWithMaxSize('rhythm', 5000) &&
+             isOptionalStringWithMaxSize('imagePrompt', 2000) &&
+             isOptionalStringWithMaxSize('coverImageUrl', 1000) &&
+             request.resource.data.createdAt is timestamp &&
+             request.resource.data.authorId == request.auth.uid;
+    }
+
+    function isValidPostUpdate() {
+      let allowedFields = ['title', 'youtubeUrl', 'musicStyle', 'musicalCharacter', 'lyricStyle', 'visualStyle', 'story', 'lyrics', 'rhythm', 'imagePrompt', 'coverImageUrl', 'createdAt', 'authorId'];
+      
+      return hasOnlyAllowedFields(allowedFields) &&
+             isStringWithMaxSize(request.resource.data.title, 200) &&
+             isOptionalStringWithMaxSize('youtubeUrl', 500) &&
+             isOptionalStringWithMaxSize('musicStyle', 500) &&
+             isOptionalStringWithMaxSize('musicalCharacter', 500) &&
+             isOptionalStringWithMaxSize('lyricStyle', 500) &&
+             isOptionalStringWithMaxSize('visualStyle', 500) &&
+             isOptionalStringWithMaxSize('story', 5000) &&
+             isOptionalStringWithMaxSize('lyrics', 10000) &&
+             isOptionalStringWithMaxSize('rhythm', 5000) &&
+             isOptionalStringWithMaxSize('imagePrompt', 2000) &&
+             isOptionalStringWithMaxSize('coverImageUrl', 1000) &&
+             request.resource.data.createdAt == resource.data.createdAt &&
+             request.resource.data.authorId == resource.data.authorId;
+    }
+
+    function isValidComment() {
+      let allowedFields = ['postId', 'userId', 'userName', 'userPhoto', 'text', 'createdAt'];
+      let requiredFields = ['postId', 'userId', 'userName', 'text', 'createdAt'];
+      
+      return hasOnlyAllowedFields(allowedFields) &&
+             hasRequiredFields(requiredFields) &&
+             isStringWithMaxSize(request.resource.data.postId, 100) &&
+             request.resource.data.userId == request.auth.uid &&
+             isStringWithMaxSize(request.resource.data.userName, 100) &&
+             isOptionalStringWithMaxSize('userPhoto', 1000) &&
+             isStringWithMaxSize(request.resource.data.text, 2000) &&
+             request.resource.data.createdAt is timestamp;
+    }
+
+    function isValidUser() {
+      let allowedFields = ['email', 'role', 'createdAt'];
+      let requiredFields = ['email', 'role', 'createdAt'];
+      
+      return hasOnlyAllowedFields(allowedFields) &&
+             hasRequiredFields(requiredFields) &&
+             isStringWithMaxSize(request.resource.data.email, 200) &&
+             (request.resource.data.role == 'admin' || request.resource.data.role == 'user') &&
+             request.resource.data.createdAt is timestamp;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /posts/{postId} {
+      allow read: if true; // Publicly readable
+      allow create: if isAdmin() && isValidPost();
+      allow update: if isAdmin() && isValidPostUpdate();
+      allow delete: if isAdmin();
+    }
+
+    match /comments/{commentId} {
+      allow read: if true; // Publicly readable
+      allow create: if isAuthenticated() && isValidComment();
+      allow update: if isOwner(resource.data.userId) && 
+                       isValidComment() && 
+                       request.resource.data.postId == resource.data.postId &&
+                       request.resource.data.userId == resource.data.userId &&
+                       request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isOwner(resource.data.userId) || isAdmin();
+    }
+
+    match /users/{userId} {
+      // Users can read their own profile, admins can read all
+      allow read: if isOwner(userId) || isAdmin();
+      
+      // Only admins can create/update roles, OR user can create their own profile with 'user' role
+      allow create: if isAuthenticated() && isValidUser() && (
+        isAdmin() || 
+        (isOwner(userId) && request.resource.data.role == 'user')
+      );
+      
+      allow update: if isAuthenticated() && isValidUser() && (
+        isAdmin() || 
+        (isOwner(userId) && request.resource.data.role == resource.data.role && request.resource.data.createdAt == resource.data.createdAt)
+      );
+      
+      allow delete: if isAdmin();
+    }
+  }
+}
