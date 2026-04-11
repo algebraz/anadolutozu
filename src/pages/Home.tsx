@@ -3,7 +3,7 @@ import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Post } from '../types';
 import PostCard from '../components/PostCard';
-import { Music, PlayCircle } from 'lucide-react';
+import { Music, PlayCircle, Eye } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function Home() {
