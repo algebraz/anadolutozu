@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { doc, getDoc, collection, query, where, orderBy, onSnapshot, addDoc, serverTimestamp, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, orderBy, onSnapshot, addDoc, serverTimestamp, deleteDoc, updateDoc, increment } from 'firebase/firestore';
 import { db, auth } from '../firebase';
 import { Post, Comment } from '../types';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
-import { ArrowLeft, Send, Trash2 } from 'lucide-react';
+import { ArrowLeft, Send, Trash2, Eye } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 export default function PostDetail() {
@@ -23,6 +23,10 @@ export default function PostDetail() {
     const fetchPost = async () => {
       try {
         const docRef = doc(db, 'posts', id);
+        
+        // Increment view count
+        await updateDoc(docRef, { viewCount: increment(1) }).catch(e => console.error("Error incrementing view count:", e));
+
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
           setPost({ id: docSnap.id, ...docSnap.data() } as Post);
@@ -162,11 +166,17 @@ export default function PostDetail() {
           <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-stone-100 mb-4">
             {post.title}
           </h1>
-          {post.createdAt && (
-            <p className="text-stone-500">
-              {format(post.createdAt.toDate(), 'd MMMM yyyy', { locale: tr })}
-            </p>
-          )}
+          <div className="flex items-center gap-4 text-stone-500">
+            {post.createdAt && (
+              <p>
+                {format(post.createdAt.toDate(), 'd MMMM yyyy', { locale: tr })}
+              </p>
+            )}
+            <div className="flex items-center gap-1 text-sm">
+              <Eye className="w-4 h-4" />
+              <span>{post.viewCount || 0} okunma</span>
+            </div>
+          </div>
         </header>
 
         {/* Info Grid */}

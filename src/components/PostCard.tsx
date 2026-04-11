@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { Post } from '../types';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
-import { PlayCircle, Image as ImageIcon } from 'lucide-react';
+import { PlayCircle, Image as ImageIcon, Eye } from 'lucide-react';
 
 export default function PostCard({ post }: { post: Post }) {
   const getYouTubeThumbnail = (url: string) => {
@@ -51,6 +51,10 @@ export default function PostCard({ post }: { post: Post }) {
                 {format(post.createdAt.toDate(), 'd MMM yyyy', { locale: tr })}
               </span>
             )}
+            <span className="text-stone-500 text-xs font-medium flex items-center gap-1 ml-auto">
+              <Eye className="w-3 h-3" />
+              {post.viewCount || 0}
+            </span>
           </div>
           
           <h3 className="text-xl font-bold text-stone-100 mb-2 group-hover:text-amber-500 transition-colors line-clamp-2 font-serif">

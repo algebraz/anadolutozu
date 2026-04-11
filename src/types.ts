@@ -13,6 +13,7 @@ export interface Post {
   coverImageUrl?: string;
   createdAt: any; // Firestore Timestamp
   authorId: string;
+  viewCount?: number;
 }
 
 export interface Comment {
