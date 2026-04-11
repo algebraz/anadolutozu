@@ -42,8 +42,7 @@ export default function PostDetail() {
 
     const q = query(
       collection(db, 'comments'),
-      where('postId', '==', id),
-      orderBy('createdAt', 'desc')
+      where('postId', '==', id)
     );
 
     const unsubscribeComments = onSnapshot(q, (snapshot) => {
@@ -51,6 +50,14 @@ export default function PostDetail() {
       snapshot.forEach((doc) => {
         commentsData.push({ id: doc.id, ...doc.data() } as Comment);
       });
+      
+      // Sort comments client-side (descending by createdAt)
+      commentsData.sort((a, b) => {
+        const timeA = a.createdAt?.toMillis() || 0;
+        const timeB = b.createdAt?.toMillis() || 0;
+        return timeB - timeA;
+      });
+      
       setComments(commentsData);
     });
 
