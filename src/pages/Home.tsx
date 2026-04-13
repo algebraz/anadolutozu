@@ -5,10 +5,12 @@ import { Post } from '../types';
 import PostCard from '../components/PostCard';
 import { Music, PlayCircle, Eye } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { usePlayerStore } from '../store/playerStore';
 
 export default function Home() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
+  const { setPlaylist, playSong } = usePlayerStore();
 
   useEffect(() => {
     const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
@@ -19,6 +21,7 @@ export default function Home() {
         postsData.push({ id: doc.id, ...doc.data() } as Post);
       });
       setPosts(postsData);
+      setPlaylist(postsData); // Update player playlist
       setLoading(false);
     }, (error) => {
       console.error("Error fetching posts:", error);
@@ -26,7 +29,7 @@ export default function Home() {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [setPlaylist]);
 
   const getYouTubeThumbnail = (url: string) => {
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
@@ -39,14 +42,14 @@ export default function Home() {
   const gridPosts = posts.length > 1 ? posts.slice(1) : [];
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100">
+    <div className="min-h-screen bg-stone-50 dark:bg-stone-950 text-stone-900 dark:text-stone-100 transition-colors duration-300">
       {/* Hero / Banner Section */}
       {loading ? (
-        <div className="h-[60vh] flex justify-center items-center border-b border-stone-800">
+        <div className="h-[60vh] flex justify-center items-center border-b border-stone-200 dark:border-stone-800">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500"></div>
         </div>
       ) : featuredPost ? (
-        <div className="relative w-full h-[70vh] min-h-[500px] bg-stone-900 border-b border-stone-800 overflow-hidden group">
+        <div className="relative w-full h-[70vh] min-h-[500px] bg-stone-900 border-b border-stone-200 dark:border-stone-800 overflow-hidden group">
           {/* Background Image */}
           <div className="absolute inset-0">
             <img 
@@ -55,15 +58,15 @@ export default function Home() {
               className="w-full h-full object-cover opacity-40 group-hover:scale-105 transition-transform duration-1000"
               referrerPolicy="no-referrer"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/60 to-transparent"></div>
-            <div className="absolute inset-0 bg-gradient-to-r from-stone-950 via-stone-950/40 to-transparent"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-stone-900 dark:from-stone-950 via-stone-900/60 dark:via-stone-950/60 to-transparent"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-stone-900 dark:from-stone-950 via-stone-900/40 dark:via-stone-950/40 to-transparent"></div>
           </div>
           
           {/* Content */}
           <div className="absolute inset-0 flex flex-col justify-end max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
             <div className="max-w-3xl relative z-10">
               <div className="flex items-center gap-3 mb-6">
-                <span className="px-3 py-1 bg-amber-500 text-stone-950 text-xs font-bold uppercase tracking-widest rounded-sm">
+                <span className="px-3 py-1 bg-amber-500 text-white dark:text-stone-950 text-xs font-bold uppercase tracking-widest rounded-sm">
                   En Yeni Kayıt
                 </span>
                 {featuredPost.musicStyle && (
@@ -76,7 +79,7 @@ export default function Home() {
                   {featuredPost.viewCount || 0} okunma
                 </span>
               </div>
-              <h1 className="text-5xl sm:text-7xl font-extrabold text-stone-100 mb-6 tracking-tight drop-shadow-lg font-serif">
+              <h1 className="text-5xl sm:text-7xl font-extrabold text-white mb-6 tracking-tight drop-shadow-lg font-serif">
                 {featuredPost.title}
               </h1>
               {featuredPost.story && (
@@ -84,25 +87,34 @@ export default function Home() {
                   {featuredPost.story}
                 </p>
               )}
-              <Link 
-                to={`/post/${featuredPost.id}`}
-                className="inline-flex items-center gap-3 bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold px-8 py-4 rounded-full transition-all hover:shadow-[0_0_30px_rgba(245,158,11,0.3)] hover:-translate-y-1"
-              >
-                <PlayCircle className="w-6 h-6" />
-                Şarkıyı Dinle & İncele
-              </Link>
+              <div className="flex flex-wrap items-center gap-4">
+                <button 
+                  onClick={() => playSong(featuredPost)}
+                  className="inline-flex items-center gap-3 bg-amber-500 hover:bg-amber-400 text-white dark:text-stone-950 font-bold px-8 py-4 rounded-full transition-all hover:shadow-[0_0_30px_rgba(245,158,11,0.3)] hover:-translate-y-1"
+                >
+                  <PlayCircle className="w-6 h-6" />
+                  Şimdi Dinle
+                </button>
+                <Link 
+                  to={`/post/${featuredPost.id}`}
+                  className="inline-flex items-center gap-3 bg-stone-800/80 hover:bg-stone-700/80 text-stone-100 font-bold px-8 py-4 rounded-full transition-all backdrop-blur-sm border border-stone-700 hover:-translate-y-1"
+                >
+                  <Eye className="w-6 h-6" />
+                  Sözleri İncele
+                </Link>
+              </div>
             </div>
           </div>
         </div>
       ) : (
-        <div className="relative py-32 px-4 sm:px-6 lg:px-8 bg-stone-900 border-b border-stone-800 overflow-hidden">
-          <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-amber-500 via-stone-900 to-stone-950"></div>
+        <div className="relative py-32 px-4 sm:px-6 lg:px-8 bg-stone-100 dark:bg-stone-900 border-b border-stone-200 dark:border-stone-800 overflow-hidden">
+          <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-amber-500 via-stone-200 dark:via-stone-900 to-stone-50 dark:to-stone-950"></div>
           <div className="relative max-w-3xl mx-auto text-center">
             <Music className="w-20 h-20 text-amber-500 mx-auto mb-8 opacity-80" />
-            <h1 className="text-5xl sm:text-6xl font-extrabold tracking-tight mb-6 font-serif">
+            <h1 className="text-5xl sm:text-6xl font-extrabold tracking-tight mb-6 font-serif text-stone-900 dark:text-white">
               Anadolu Tozu
             </h1>
-            <p className="text-xl text-stone-400 leading-relaxed">
+            <p className="text-xl text-stone-600 dark:text-stone-400 leading-relaxed">
               Yapay zeka ile üretilen, geleneksel motiflerle modern tınıların harmanlandığı müzik projesi.
             </p>
           </div>
@@ -112,8 +124,8 @@ export default function Home() {
       {/* Posts Grid */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="flex items-center justify-between mb-10">
-          <h2 className="text-3xl font-bold text-stone-100 font-serif">Tüm Şarkılar</h2>
-          <div className="h-px bg-stone-800 flex-1 ml-8"></div>
+          <h2 className="text-3xl font-bold text-stone-900 dark:text-stone-100 font-serif">Tüm Şarkılar</h2>
+          <div className="h-px bg-stone-200 dark:bg-stone-800 flex-1 ml-8"></div>
         </div>
 
         {!loading && gridPosts.length > 0 ? (
