@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, addDoc, serverTimestamp, doc, getDoc, query, orderBy, onSnapshot, deleteDoc } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, doc, getDoc, query, orderBy, onSnapshot, deleteDoc, updateDoc } from 'firebase/firestore';
 import { db, auth } from '../firebase';
-import { ShieldAlert, Save, Plus, List, BarChart2, Trash2, Eye, LayoutDashboard, Music, Upload, Loader2 } from 'lucide-react';
+import { ShieldAlert, Save, Plus, List, BarChart2, Trash2, Eye, LayoutDashboard, Music, Upload, Loader2, Edit } from 'lucide-react';
 import { Post } from '../types';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
@@ -13,6 +13,7 @@ export default function Admin() {
   const [submitting, setSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState<'new' | 'list' | 'stats'>('new');
   const [posts, setPosts] = useState<Post[]>([]);
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -98,22 +99,62 @@ export default function Admin() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const resetForm = () => {
+    setFormData({
+      title: '',
+      youtubeUrl: '',
+      story: '',
+      lyrics: '',
+      rhythm: '',
+      coverImageUrl: ''
+    });
+    setEditingPostId(null);
+  };
+
+  const handleEdit = (post: Post) => {
+    setFormData({
+      title: post.title || '',
+      youtubeUrl: post.youtubeUrl || '',
+      story: post.story || '',
+      lyrics: post.lyrics || '',
+      rhythm: post.rhythm || '',
+      coverImageUrl: post.coverImageUrl || ''
+    });
+    setEditingPostId(post.id);
+    setActiveTab('new');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isAdmin || !auth.currentUser) return;
     
     setSubmitting(true);
     try {
-      const docRef = await addDoc(collection(db, 'posts'), {
-        ...formData,
-        createdAt: serverTimestamp(),
-        authorId: auth.currentUser.uid,
-        viewCount: 0
-      });
-      alert('Şarkı başarıyla eklendi!');
-      navigate(`/post/${docRef.id}`);
+      if (editingPostId) {
+        const docRef = doc(db, 'posts', editingPostId);
+        await updateDoc(docRef, {
+          title: formData.title,
+          youtubeUrl: formData.youtubeUrl,
+          story: formData.story,
+          lyrics: formData.lyrics,
+          rhythm: formData.rhythm,
+          coverImageUrl: formData.coverImageUrl
+        });
+        alert('Şarkı başarıyla güncellendi!');
+        setActiveTab('list');
+        resetForm();
+      } else {
+        const docRef = await addDoc(collection(db, 'posts'), {
+          ...formData,
+          createdAt: serverTimestamp(),
+          authorId: auth.currentUser.uid,
+          viewCount: 0
+        });
+        alert('Şarkı başarıyla eklendi!');
+        navigate(`/post/${docRef.id}`);
+      }
     } catch (error) {
-      console.error("Error adding document: ", error);
+      console.error("Error saving document: ", error);
       alert('Bir hata oluştu. Lütfen tekrar deneyin.');
     } finally {
       setSubmitting(false);
@@ -165,11 +206,11 @@ export default function Admin() {
         
         <nav className="flex flex-col gap-2">
           <button 
-            onClick={() => setActiveTab('new')}
+            onClick={() => { setActiveTab('new'); resetForm(); }}
             className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-left ${activeTab === 'new' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' : 'text-stone-400 hover:bg-stone-800 hover:text-stone-200'}`}
           >
             <Plus className="w-5 h-5" />
-            <span className="font-medium">Yeni Şarkı Ekle</span>
+            <span className="font-medium">{editingPostId ? 'Şarkıyı Düzenle' : 'Yeni Şarkı Ekle'}</span>
           </button>
           
           <button 
@@ -194,7 +235,7 @@ export default function Admin() {
       <main className="flex-1 p-6 md:p-10 overflow-y-auto">
         {activeTab === 'new' && (
           <div className="max-w-4xl mx-auto">
-            <h1 className="text-3xl font-bold mb-8 font-serif">Yeni Şarkı Ekle</h1>
+            <h1 className="text-3xl font-bold mb-8 font-serif">{editingPostId ? 'Şarkıyı Düzenle' : 'Yeni Şarkı Ekle'}</h1>
             <form onSubmit={handleSubmit} className="space-y-8 bg-stone-900 p-8 rounded-2xl border border-stone-800 shadow-xl">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="md:col-span-2">
@@ -280,14 +321,23 @@ export default function Admin() {
                 />
               </div>
 
-              <div className="pt-4 border-t border-stone-800 flex justify-end">
+              <div className="pt-4 border-t border-stone-800 flex justify-end gap-4">
+                {editingPostId && (
+                  <button
+                    type="button"
+                    onClick={() => { resetForm(); setActiveTab('list'); }}
+                    className="px-6 py-3 rounded-lg font-medium text-stone-400 hover:text-stone-200 hover:bg-stone-800 transition-colors"
+                  >
+                    İptal
+                  </button>
+                )}
                 <button
                   type="submit"
                   disabled={submitting}
                   className="bg-amber-500 hover:bg-amber-600 text-stone-950 font-bold py-3 px-8 rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50"
                 >
                   <Save className="w-5 h-5" />
-                  {submitting ? 'Kaydediliyor...' : 'Şarkıyı Kaydet ve Yayınla'}
+                  {submitting ? 'Kaydediliyor...' : (editingPostId ? 'Değişiklikleri Kaydet' : 'Şarkıyı Kaydet ve Yayınla')}
                 </button>
               </div>
             </form>
@@ -332,13 +382,22 @@ export default function Admin() {
                             </div>
                           </td>
                           <td className="p-4 text-right">
-                            <button 
-                              onClick={() => handleDeletePost(post.id)}
-                              className="p-2 text-stone-500 hover:text-red-500 hover:bg-red-500/10 rounded-md transition-colors"
-                              title="Sil"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                            <div className="flex items-center justify-end gap-2">
+                              <button 
+                                onClick={() => handleEdit(post)}
+                                className="p-2 text-stone-500 hover:text-blue-500 hover:bg-blue-500/10 rounded-md transition-colors"
+                                title="Düzenle"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </button>
+                              <button 
+                                onClick={() => handleDeletePost(post.id)}
+                                className="p-2 text-stone-500 hover:text-red-500 hover:bg-red-500/10 rounded-md transition-colors"
+                                title="Sil"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))
