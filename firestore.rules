@@ -76,7 +76,9 @@ service cloud.firestore {
     }
 
     function isOptionalStringWithMaxSize(field, maxSize) {
-      return !(field in request.resource.data) || isStringWithMaxSize(request.resource.data[field], maxSize);
+      return !(field in request.resource.data) || 
+             request.resource.data[field] == null || 
+             (request.resource.data[field] is string && request.resource.data[field].size() <= maxSize);
     }
 
     function isOptionalNumber(field) {
