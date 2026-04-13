@@ -3,46 +3,6 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     // ===============================================================
-    // Assumed Data Model
-    // ===============================================================
-    //
-    // Collection: posts
-    // Document ID: auto-generated
-    // Fields:
-    //   - title: string (required)
-    //   - youtubeUrl: string (optional)
-    //   - musicStyle: string (optional)
-    //   - musicalCharacter: string (optional)
-    //   - lyricStyle: string (optional)
-    //   - visualStyle: string (optional)
-    //   - story: string (optional)
-    //   - lyrics: string (optional)
-    //   - rhythm: string (optional)
-    //   - imagePrompt: string (optional)
-    //   - coverImageUrl: string (optional)
-    //   - createdAt: timestamp (required, immutable)
-    //   - authorId: string (required, immutable)
-    //
-    // Collection: comments
-    // Document ID: auto-generated
-    // Fields:
-    //   - postId: string (required, immutable)
-    //   - userId: string (required, immutable)
-    //   - userName: string (required)
-    //   - userPhoto: string (optional)
-    //   - text: string (required, max 1000 chars)
-    //   - createdAt: timestamp (required, immutable)
-    //
-    // Collection: users
-    // Document ID: user uid
-    // Fields:
-    //   - email: string (required)
-    //   - role: string (required, 'admin' or 'user')
-    //   - createdAt: timestamp (required, immutable)
-    //
-    // ===============================================================
-
-    // ===============================================================
     // Helper Functions
     // ===============================================================
     
@@ -51,7 +11,10 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return request.auth != null && request.auth.token.email == "zaferozlu@gmail.com";
+      return request.auth != null && (
+        request.auth.token.email == "zaferozlu@gmail.com" || 
+        request.auth.uid == "5flA6J5d1JMuOZdO9bwsh3IiOnd2"
+      );
     }
 
     function isOwner(userId) {
@@ -74,36 +37,6 @@ service cloud.firestore {
       return !(field in request.resource.data) || 
              request.resource.data[field] == null || 
              (request.resource.data[field] is string && request.resource.data[field].size() <= maxSize);
-    }
-
-    function isOptionalNumber(field) {
-      return !(field in request.resource.data) || request.resource.data[field] is number;
-    }
-
-    function isValidViewCountIncrement() {
-      let isOnlyViewCount = request.resource.data.diff(resource.data).affectedKeys().hasOnly(['viewCount']);
-      let currentCount = ('viewCount' in resource.data) ? resource.data.viewCount : 0;
-      let newCount = request.resource.data.viewCount;
-      return isOnlyViewCount && newCount == currentCount + 1;
-    }
-
-    // ===============================================================
-    // Domain Validators
-    // ===============================================================
-
-    function isValidPost() {
-      let requiredFields = ['title', 'createdAt', 'authorId'];
-      
-      return hasRequiredFields(requiredFields) &&
-             request.resource.data.title is string &&
-             request.resource.data.createdAt is timestamp &&
-             request.resource.data.authorId == request.auth.uid;
-    }
-
-    function isValidPostUpdate() {
-      return request.resource.data.title is string &&
-             request.resource.data.createdAt == resource.data.createdAt &&
-             request.resource.data.authorId == resource.data.authorId;
     }
 
     function isValidComment() {
