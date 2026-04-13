@@ -51,11 +51,7 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return request.auth != null && (
-        request.auth.token.email == "zaferozlu@gmail.com" ||
-        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
-      );
+      return request.auth != null && request.auth.token.email == "zaferozlu@gmail.com";
     }
 
     function isOwner(userId) {
@@ -141,9 +137,7 @@ service cloud.firestore {
 
     match /posts/{postId} {
       allow read: if true; // Publicly readable
-      allow create: if isAdmin();
-      allow update: if isAdmin() || isValidViewCountIncrement();
-      allow delete: if isAdmin();
+      allow write: if isAdmin();
     }
 
     match /comments/{commentId} {
