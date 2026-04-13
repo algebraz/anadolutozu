@@ -153,9 +153,9 @@ export default function Admin() {
         alert('Şarkı başarıyla eklendi!');
         navigate(`/post/${docRef.id}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving document: ", error);
-      alert('Bir hata oluştu. Lütfen tekrar deneyin.');
+      alert(`Bir hata oluştu: ${error.message || 'Bilinmeyen hata'}`);
     } finally {
       setSubmitting(false);
     }
