@@ -186,14 +186,6 @@ export default function PostDetail() {
           </div>
         </header>
 
-        {/* Info Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-          {post.musicStyle && <InfoCard title="Müzik Tarzı" content={post.musicStyle} />}
-          {post.musicalCharacter && <InfoCard title="Müzikal Karakter" content={post.musicalCharacter} />}
-          {post.lyricStyle && <InfoCard title="Söz Tarzı" content={post.lyricStyle} />}
-          {post.visualStyle && <InfoCard title="Görsel Tarz" content={post.visualStyle} />}
-        </div>
-
         {/* Long Text Sections */}
         <div className="space-y-12">
           {post.story && (
@@ -219,15 +211,6 @@ export default function PostDetail() {
               <h2 className="text-2xl font-bold text-amber-500 mb-4 border-b border-stone-800 pb-2">Matematiksel Ritim ve Düzenleme (Teorik Bilgi)</h2>
               <div className="prose prose-invert prose-stone max-w-none">
                 <ReactMarkdown>{post.rhythm}</ReactMarkdown>
-              </div>
-            </section>
-          )}
-
-          {post.imagePrompt && (
-            <section>
-              <h2 className="text-2xl font-bold text-amber-500 mb-4 border-b border-stone-800 pb-2">Albüm Kapağı İçin Görsel Komutu (Image Prompt)</h2>
-              <div className="bg-stone-900 p-4 rounded-xl border border-stone-800 font-mono text-sm text-stone-400">
-                {post.imagePrompt}
               </div>
             </section>
           )}

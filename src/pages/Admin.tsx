@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { collection, addDoc, serverTimestamp, doc, getDoc, query, orderBy, onSnapshot, deleteDoc } from 'firebase/firestore';
 import { db, auth } from '../firebase';
-import { ShieldAlert, Save, Plus, List, BarChart2, Trash2, Eye, LayoutDashboard, Music } from 'lucide-react';
+import { ShieldAlert, Save, Plus, List, BarChart2, Trash2, Eye, LayoutDashboard, Music, Upload, Loader2 } from 'lucide-react';
 import { Post } from '../types';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
@@ -17,16 +17,42 @@ export default function Admin() {
   const [formData, setFormData] = useState({
     title: '',
     youtubeUrl: '',
-    musicStyle: '',
-    musicalCharacter: '',
-    lyricStyle: '',
-    visualStyle: '',
     story: '',
     lyrics: '',
     rhythm: '',
-    imagePrompt: '',
     coverImageUrl: ''
   });
+
+  const [uploadingImage, setUploadingImage] = useState(false);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingImage(true);
+    try {
+      const uploadData = new FormData();
+      uploadData.append('image', file);
+
+      const response = await fetch('https://api.imgbb.com/1/upload?key=4fd59b3be8d65fb4ea9b19386dcfe820', {
+        method: 'POST',
+        body: uploadData,
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        setFormData(prev => ({ ...prev, coverImageUrl: data.data.url }));
+      } else {
+        alert('Görsel yüklenirken bir hata oluştu.');
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert('Görsel yüklenirken bir hata oluştu.');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
 
   useEffect(() => {
     const checkAdmin = async () => {
@@ -195,60 +221,29 @@ export default function Admin() {
                   />
                 </div>
 
-                <div>
+                <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-stone-400 mb-2">Kapak Görseli URL</label>
-                  <input
-                    type="url"
-                    name="coverImageUrl"
-                    value={formData.coverImageUrl}
-                    onChange={handleChange}
-                    className="w-full bg-stone-950 border border-stone-800 rounded-lg p-3 text-stone-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
-                    placeholder="https://..."
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-stone-400 mb-2">Müzik Tarzı</label>
-                  <input
-                    type="text"
-                    name="musicStyle"
-                    value={formData.musicStyle}
-                    onChange={handleChange}
-                    className="w-full bg-stone-950 border border-stone-800 rounded-lg p-3 text-stone-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-stone-400 mb-2">Müzikal Karakter</label>
-                  <input
-                    type="text"
-                    name="musicalCharacter"
-                    value={formData.musicalCharacter}
-                    onChange={handleChange}
-                    className="w-full bg-stone-950 border border-stone-800 rounded-lg p-3 text-stone-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-stone-400 mb-2">Söz Tarzı</label>
-                  <input
-                    type="text"
-                    name="lyricStyle"
-                    value={formData.lyricStyle}
-                    onChange={handleChange}
-                    className="w-full bg-stone-950 border border-stone-800 rounded-lg p-3 text-stone-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-stone-400 mb-2">Görsel Tarz</label>
-                  <input
-                    type="text"
-                    name="visualStyle"
-                    value={formData.visualStyle}
-                    onChange={handleChange}
-                    className="w-full bg-stone-950 border border-stone-800 rounded-lg p-3 text-stone-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
-                  />
+                  <div className="flex gap-3">
+                    <input
+                      type="url"
+                      name="coverImageUrl"
+                      value={formData.coverImageUrl}
+                      onChange={handleChange}
+                      className="flex-1 bg-stone-950 border border-stone-800 rounded-lg p-3 text-stone-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
+                      placeholder="https://..."
+                    />
+                    <label className="flex items-center justify-center gap-2 bg-stone-800 hover:bg-stone-700 text-stone-200 px-4 rounded-lg cursor-pointer transition-colors border border-stone-700 whitespace-nowrap">
+                      {uploadingImage ? <Loader2 className="w-5 h-5 animate-spin" /> : <Upload className="w-5 h-5" />}
+                      <span className="text-sm font-medium">{uploadingImage ? 'Yükleniyor...' : 'Görsel Seç / Yükle'}</span>
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        className="hidden" 
+                        onChange={handleImageUpload}
+                        disabled={uploadingImage}
+                      />
+                    </label>
+                  </div>
                 </div>
               </div>
 
@@ -281,17 +276,6 @@ export default function Admin() {
                   value={formData.rhythm}
                   onChange={handleChange}
                   rows={4}
-                  className="w-full bg-stone-950 border border-stone-800 rounded-lg p-3 text-stone-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-stone-400 mb-2">Albüm Kapağı İçin Görsel Komutu (Image Prompt)</label>
-                <textarea
-                  name="imagePrompt"
-                  value={formData.imagePrompt}
-                  onChange={handleChange}
-                  rows={3}
                   className="w-full bg-stone-950 border border-stone-800 rounded-lg p-3 text-stone-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
                 />
               </div>

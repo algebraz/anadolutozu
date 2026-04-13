@@ -2,14 +2,9 @@ export interface Post {
   id: string;
   title: string;
   youtubeUrl?: string;
-  musicStyle?: string;
-  musicalCharacter?: string;
-  lyricStyle?: string;
-  visualStyle?: string;
   story?: string;
   lyrics?: string;
   rhythm?: string;
-  imagePrompt?: string;
   coverImageUrl?: string;
   createdAt: any; // Firestore Timestamp
   authorId: string;
