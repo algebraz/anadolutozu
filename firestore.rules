@@ -97,43 +97,16 @@ service cloud.firestore {
     // ===============================================================
 
     function isValidPost() {
-      let allowedFields = ['title', 'youtubeUrl', 'story', 'lyrics', 'rhythm', 'coverImageUrl', 'createdAt', 'authorId', 'viewCount', 'musicStyle', 'musicalCharacter', 'lyricStyle', 'visualStyle', 'imagePrompt'];
       let requiredFields = ['title', 'createdAt', 'authorId'];
       
-      return hasOnlyAllowedFields(allowedFields) &&
-             hasRequiredFields(requiredFields) &&
-             isStringWithMaxSize(request.resource.data.title, 200) &&
-             isOptionalStringWithMaxSize('youtubeUrl', 500) &&
-             isOptionalStringWithMaxSize('story', 5000) &&
-             isOptionalStringWithMaxSize('lyrics', 10000) &&
-             isOptionalStringWithMaxSize('rhythm', 5000) &&
-             isOptionalStringWithMaxSize('coverImageUrl', 1000) &&
-             isOptionalStringWithMaxSize('musicStyle', 500) &&
-             isOptionalStringWithMaxSize('musicalCharacter', 500) &&
-             isOptionalStringWithMaxSize('lyricStyle', 500) &&
-             isOptionalStringWithMaxSize('visualStyle', 500) &&
-             isOptionalStringWithMaxSize('imagePrompt', 2000) &&
-             isOptionalNumber('viewCount') &&
+      return hasRequiredFields(requiredFields) &&
+             request.resource.data.title is string &&
              request.resource.data.createdAt is timestamp &&
              request.resource.data.authorId == request.auth.uid;
     }
 
     function isValidPostUpdate() {
-      let allowedFields = ['title', 'youtubeUrl', 'story', 'lyrics', 'rhythm', 'coverImageUrl', 'createdAt', 'authorId', 'viewCount', 'musicStyle', 'musicalCharacter', 'lyricStyle', 'visualStyle', 'imagePrompt'];
-      
-      return hasOnlyAllowedFields(allowedFields) &&
-             isStringWithMaxSize(request.resource.data.title, 200) &&
-             isOptionalStringWithMaxSize('youtubeUrl', 500) &&
-             isOptionalStringWithMaxSize('story', 5000) &&
-             isOptionalStringWithMaxSize('lyrics', 10000) &&
-             isOptionalStringWithMaxSize('rhythm', 5000) &&
-             isOptionalStringWithMaxSize('coverImageUrl', 1000) &&
-             isOptionalStringWithMaxSize('musicStyle', 500) &&
-             isOptionalStringWithMaxSize('musicalCharacter', 500) &&
-             isOptionalStringWithMaxSize('lyricStyle', 500) &&
-             isOptionalStringWithMaxSize('visualStyle', 500) &&
-             isOptionalStringWithMaxSize('imagePrompt', 2000) &&
-             isOptionalNumber('viewCount') &&
+      return request.resource.data.title is string &&
              request.resource.data.createdAt == resource.data.createdAt &&
              request.resource.data.authorId == resource.data.authorId;
     }
