@@ -1,5 +1,7 @@
 rules_version = '2';
 
+// TEST: GitHub Actions otomatik yükleme testi
+
 service cloud.firestore {
   match /databases/{database}/documents {
     // ===============================================================
