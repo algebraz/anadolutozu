@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import ReactPlayerModule from 'react-player';
-const ReactPlayer = ReactPlayerModule as any;
+import ReactPlayer from 'react-player';
 import { usePlayerStore } from '../store/playerStore';
 import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Maximize2, Minimize2, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -46,7 +45,7 @@ export default function MusicPlayer() {
 
   const handleSeekMouseUp = (e: React.MouseEvent<HTMLInputElement>) => {
     setSeeking(false);
-    if (playerRef.current && typeof playerRef.current.seekTo === 'function') {
+    if (playerRef.current) {
       playerRef.current.seekTo(parseFloat((e.target as HTMLInputElement).value));
     }
   };
@@ -78,16 +77,16 @@ export default function MusicPlayer() {
   return (
     <>
       {/* Hidden React Player for Audio */}
-      <div className="fixed -top-[9999px] -left-[9999px] w-32 h-32 pointer-events-none">
+      <div className="fixed top-0 left-0 w-32 h-32 opacity-0 pointer-events-none z-[-1]">
         <ReactPlayer
           ref={playerRef}
           url={currentSong.youtubeUrl || currentSong.audioUrl || ''}
-          playing={isReady && isPlaying}
+          playing={isPlaying}
           volume={isMuted ? 0 : volume}
           onProgress={handleProgress}
           onReady={() => {
             setIsReady(true);
-            if (playerRef.current && typeof playerRef.current.getDuration === 'function') {
+            if (playerRef.current) {
               setDuration(playerRef.current.getDuration());
             }
           }}
