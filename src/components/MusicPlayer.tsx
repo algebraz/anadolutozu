@@ -26,6 +26,11 @@ export default function MusicPlayer() {
   const playerRef = useRef<any>(null);
   const [isMuted, setIsMuted] = useState(false);
   const [seeking, setSeeking] = useState(false);
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    setIsReady(false);
+  }, [currentSong?.youtubeUrl, currentSong?.audioUrl]);
 
   if (!currentSong) return null;
 
@@ -41,7 +46,7 @@ export default function MusicPlayer() {
 
   const handleSeekMouseUp = (e: React.MouseEvent<HTMLInputElement>) => {
     setSeeking(false);
-    if (playerRef.current) {
+    if (playerRef.current && typeof playerRef.current.seekTo === 'function') {
       playerRef.current.seekTo(parseFloat((e.target as HTMLInputElement).value));
     }
   };
@@ -73,24 +78,29 @@ export default function MusicPlayer() {
   return (
     <>
       {/* Hidden React Player for Audio */}
-      <div className="fixed -top-[9999px] -left-[9999px] w-0 h-0 opacity-0 pointer-events-none">
+      <div className="fixed -top-[9999px] -left-[9999px] w-32 h-32 pointer-events-none">
         <ReactPlayer
           ref={playerRef}
           url={currentSong.youtubeUrl || currentSong.audioUrl || ''}
-          playing={isPlaying}
+          playing={isReady && isPlaying}
           volume={isMuted ? 0 : volume}
           onProgress={handleProgress}
           onReady={() => {
-            if (playerRef.current) {
+            setIsReady(true);
+            if (playerRef.current && typeof playerRef.current.getDuration === 'function') {
               setDuration(playerRef.current.getDuration());
             }
           }}
           onEnded={nextSong}
-          width="10px"
-          height="10px"
+          width="100px"
+          height="100px"
           config={{
             youtube: {
-              playerVars: { showinfo: 0, controls: 0 }
+              playerVars: { 
+                showinfo: 0, 
+                controls: 0,
+                origin: window.location.origin
+              }
             }
           } as any}
         />
