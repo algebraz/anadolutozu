@@ -2,6 +2,8 @@ export interface Post {
   id: string;
   title: string;
   youtubeUrl?: string;
+  audioUrl?: string;
+  musicStyle?: string;
   story?: string;
   lyrics?: string;
   rhythm?: string;

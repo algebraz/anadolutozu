@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import ReactPlayer from 'react-player';
+import ReactPlayerModule from 'react-player';
+const ReactPlayer = ReactPlayerModule as any;
 import { usePlayerStore } from '../store/playerStore';
 import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Maximize2, Minimize2, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -22,13 +23,13 @@ export default function MusicPlayer() {
     toggleExpanded
   } = usePlayerStore();
 
-  const playerRef = useRef<ReactPlayer>(null);
+  const playerRef = useRef<any>(null);
   const [isMuted, setIsMuted] = useState(false);
   const [seeking, setSeeking] = useState(false);
 
   if (!currentSong) return null;
 
-  const handleProgress = (state: { playedSeconds: number }) => {
+  const handleProgress = (state: any) => {
     if (!seeking) {
       setProgress(state.playedSeconds);
     }
@@ -72,10 +73,10 @@ export default function MusicPlayer() {
   return (
     <>
       {/* Hidden React Player for Audio */}
-      <div className="hidden">
+      <div className="fixed -top-[9999px] -left-[9999px] w-0 h-0 opacity-0 pointer-events-none">
         <ReactPlayer
           ref={playerRef}
-          url={currentSong.youtubeUrl || currentSong.audioUrl}
+          url={currentSong.youtubeUrl || currentSong.audioUrl || ''}
           playing={isPlaying}
           volume={isMuted ? 0 : volume}
           onProgress={handleProgress}
@@ -85,13 +86,13 @@ export default function MusicPlayer() {
             }
           }}
           onEnded={nextSong}
-          width="0"
-          height="0"
+          width="10px"
+          height="10px"
           config={{
             youtube: {
               playerVars: { showinfo: 0, controls: 0 }
             }
-          }}
+          } as any}
         />
       </div>
 
