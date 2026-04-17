@@ -15,4 +15,4 @@ jobs:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_ANADOLUTOZU }}'
           channelId: live
-          projectId: anadolutozu
+          projectId: anadolutozu1
