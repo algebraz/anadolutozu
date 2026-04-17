@@ -74,10 +74,6 @@ export default function Home() {
                     {featuredPost.musicStyle}
                   </span>
                 )}
-                <span className="text-stone-300 text-sm font-medium flex items-center gap-1 ml-auto bg-stone-950/50 px-3 py-1 rounded-sm backdrop-blur-sm border border-stone-800">
-                  <Eye className="w-4 h-4" />
-                  {featuredPost.viewCount || 0} okunma
-                </span>
               </div>
               <h1 className="text-5xl sm:text-7xl font-extrabold text-white mb-6 tracking-tight drop-shadow-lg font-serif">
                 {featuredPost.title}
